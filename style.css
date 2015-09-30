@@ -1,0 +1,34 @@
+html {
+	width: 100%;
+}
+
+*{
+  font-family:Courier;
+}
+
+.center{
+	border: 1px solid;
+	width: 50%;
+	margin: auto;
+	padding: 10px;
+	text-align: center;
+}
+
+h2{
+	text-align: center;
+}
+
+.tab{
+	position: relative;
+	width: 33%;
+	float: left;
+}
+
+.mainTab{
+	border: 1px solid;
+	width: 60%;
+	margin: auto;
+	padding: 20px;
+	text-align: center;
+	padding-top: 10px;
+}
