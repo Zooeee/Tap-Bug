@@ -20,15 +20,23 @@ h2{
 
 .tab{
 	position: relative;
-	width: 33%;
+	width: 30%;
 	float: left;
+	margin-left: 0px;
 }
 
 .mainTab{
 	border: 1px solid;
-	width: 60%;
+	width: 90%;
 	margin: auto;
 	padding: 20px;
 	text-align: center;
 	padding-top: 10px;
+}
+
+canvas{
+	width:60%;
+	height:40%;
+	border:1px solid black;
+	padding-top: 0px;
 }

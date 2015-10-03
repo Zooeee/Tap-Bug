@@ -1,6 +1,6 @@
 function pageTransition(){
 	document.open('text/html');
-	document.write("<!DOCTYPE html><html><head><script src='tap.js'type='text/javascript'></script><link rel='stylesheet' type='text/css' href='style.css'></head><body onload='countDown()'><h2>Tap Tap Bug</h2><div class='mainTab' id='main'><div class='tab'>Time:<span id='time'>01:00</span></div><button class='tab' id='pause' onClick='pause()'>Pause</button><div class='tab'>Score:</div></div></body></html>");
+	document.write("<!DOCTYPE html><html><head><script src='tap.js'type='text/javascript'></script><link rel='stylesheet' type='text/css' href='style.css'></head><body onload='countDown()'><h2>Tap Tap Bug</h2><div class='mainTab' id='main'><div class='tab'>Time:<span id='time'>01:00</span></div><button class='tab' id='pause' onClick='pause()'>Pause</button><div class='tab'>Score:</div><canvas id='myCanvas'>Your browser does not support the HTML5 canvas tag.</canvas></div></body></html>");
 	document.close();
 }
 
