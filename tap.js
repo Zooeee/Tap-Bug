@@ -24,7 +24,7 @@ function popUp(){
 
 function toggleCountDown(){
     targetEvent = isPaused ? false : true;
-    text = isPaused ? "pause" : "resume";
+    text = isPaused ? "Pause" : "Resume";
     isPaused = targetEvent;
     document.getElementById("pause").innerHTML = text;
 }

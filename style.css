@@ -2,6 +2,7 @@ html {
 	width: 100%;
 }
 
+
 *{
   font-family:Courier;
 }
@@ -20,7 +21,7 @@ h2{
 
 .tab{
 	position: relative;
-	width: 30%;
+	width: 32%;
 	float: left;
 	margin-left: 0px;
 }
@@ -34,9 +35,12 @@ h2{
 	padding-top: 10px;
 }
 
+/**
 canvas{
-	width:60%;
-	height:40%;
+	width:400px;
+	height:600px;
 	border:1px solid black;
-	padding-top: 0px;
+	margin-top: 5px;
 }
+**/
+
