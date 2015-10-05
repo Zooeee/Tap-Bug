@@ -1,5 +1,6 @@
 var canvas = document.getElementById("board");
 var context = canvas.getContext("2d");
+var bugs = [];
 
 function drawFood(x, y, z) {
 	context.beginPath();
@@ -10,7 +11,7 @@ function drawFood(x, y, z) {
 	context.closePath();
 }
 
-drawFood(30, 125, 5);
+//drawFood(30, 125, 5);
 
 function makeBug(x, y, z, type){
 	context.save();
@@ -48,5 +49,25 @@ function makeBug(x, y, z, type){
 	context.lineTo(x/2+z+5, y+z+5);
 	context.stroke();
 	context.closePath();
+
+	return (x, y)
 }
-makeBug(40, 20, 4, "");
+//makeBug(40, 20, 4, "");
+
+function randomCoord(){
+	a = 10;
+	while(a>0){
+		drawFood(Math.random()*398, Math.random()*(600-120) + 120, 5, "");
+		a--;
+	}
+}
+randomCoord();
+//var timer = setInterval(myTimer, 5 * 1000);
+/**
+canvas.addEventListener("mousedown", kill, false);
+function kill(event){
+	var x = event.offsetX;
+	var y = event.offsetY;
+	if()
+}
+**/

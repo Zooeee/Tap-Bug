@@ -29,7 +29,17 @@ function toggleCountDown(){
     document.getElementById("pause").innerHTML = text;
 }
 
-
-function toggleText(){
-
+function storage(){
+    score = document.getElementById("score");
+    if(typeof(Storage) === "undefined"){
+        localStorage.score(highest);
+        score.innerHTML = localStorage.getItem("highest");
+    }
+    else if(score > Number(localStorage.highest)){
+        localStorage.score = score;
+        score.innerHTML = localStorage.score;
+    }
+    else{
+        document.getElementById("score").innerHTML = "Sorry your browser does not support web storage";
+    }
 }
