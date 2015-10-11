@@ -6,7 +6,6 @@ var bugs = [];
 var foods = [];
 var fullCircle = Math.PI * 2;
 
-
 function beginLoop() {
     var frameId = 0;
 
@@ -18,11 +17,49 @@ function beginLoop() {
     loop();
 }
 
-canvas = document.getElementById("board");
-//canvas.setAttribute('width', 400);
-//canvas.setAttribute('height', 600);
+canvas = document.querySelector('canvas#board');
+canvas.setAttribute('width', 400);
+canvas.setAttribute('height', 600);
 
 surface = canvas.getContext('2d');
+
+function randomTime() {
+    min = 1;
+    max = 3;
+    interval = max - min;
+    return Math.floor((Math.random() * interval) + min);
+}
+
+function randomX() {
+    min = 10;
+    max = 390;
+    interval = max - min;
+    return ((Math.random() * interval) + min)
+}
+
+function food() {
+    var pos = {
+      x:  Math.random() * 398,
+      y: Math.random() * (600 - 120) + 120
+    };
+
+    function drawFood(ctx) {
+        ctx.beginPath();
+        //console.log(pos.x);
+        ctx.arc(pos.x, pos.y, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = "#855C33";
+        ctx.stroke();
+        ctx.fill();
+        ctx.closePath();
+        //foods.push(pos);
+    }
+
+    return {
+        drawFood: drawFood,
+        x: pos.x,
+        y: pos.y
+    }
+}
 
 function makeBugs() {
     var position = {
@@ -31,17 +68,17 @@ function makeBugs() {
     };
 
     var turnSpeed = fullCircle / 30;
-    var speed = 0.2;
+    var speed = 2;
     var orientation = 0;
     var target = findNewTarget();
 
-    function makeBug(position, ctx, z, type) {
+    function makeBug(ctx, z, type) {
         ctx.translate(position.x, position.y);
         ctx.rotate(orientation + Math.PI * 0.5);
         ctx.beginPath();
         ctx.scale(0.5, 2);
-				ctx.arc(x, y/2, z * 2, 0, 2 * Math.PI);
-				//ctx.arc(0, 0, z, 0, 2 * Math.PI);
+        //ctx.arc(x, y/2, z * 2, 0, 2 * Math.PI, false);
+        ctx.arc(0, 0, z, 0, 2 * Math.PI);
         ctx.fillStyle = type;
         ctx.stroke();
         ctx.fill();
@@ -77,22 +114,17 @@ function makeBugs() {
         ctx.closePath();
     }
 
-    function draw(ctx) {
+    function drawBug(ctx) {
         ctx.save();
-        makeBug(ctx, 5, "orange");
+        makeBug(ctx, 5, "black");
         ctx.restore();
-
-        ctx.beginPath();
-        ctx.fillStyle = 'rgba(255,0,0,0.5)';
-        ctx.arc(target.x, target.y, 2, 0, Math.PI * 2, true);
-        ctx.fill();
     }
 
     function update() {
         var y = target.y - position.y;
         var x = target.x - position.x;
         var d2 = Math.pow(x, 2) + Math.pow(y, 2);
-        if (d2 < 16) {
+        if (d2 < 70) {
             target = findNewTarget();
         } else {
 
@@ -117,48 +149,65 @@ function makeBugs() {
     }
 
     function findNewTarget() {
-        var target = {
-            x: Math.round(Math.random() * 400),
-            y: Math.round(Math.random() * 600)
-        };
-
-        return target;
+        //calculate the closest path between the bug and food
+        l = foods.length - 1;
+        var minDistance = Number.MAX_VALUE;
+        var minIndex = 0;
+        for (; l != 0; l--) {
+            x = foods[l].x - position.x;
+            y = foods[l].y - position.y;
+            distance = Math.pow(x, 2) + Math.pow(y, 2);
+            if (distance < minDistance) {
+                minDistance = distance;
+                minIndex = l;
+            }
+        }
+        return foods[minIndex];
     }
-
     return {
-        draw: draw,
+        target: target,
+        drawBug: drawBug,
         update: update
     }
 }
 
 // define the main screen for the game
 mainGameScreen = (function () {
-
-    var entities = [];
-    var numOfEnemyShips = 4;
+    var numOfBugs = 5;
+    var numOfFoods = 5;
 
     function start() {
-
-        for (var i = 0; i <= numOfEnemyShips; i++) {
-            entities.push(makeBugs(i * 10, i));
+        for (var p = 0; p < numOfFoods; p++) {
+            foods.push(food());
+        }
+        for (var i = 0; i < numOfBugs; i++) {
+            bugs.push(makeBugs()); //setInterval(makeBugs, randomTime()*1000);
         }
     }
 
     function draw(ctx) {
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = 'grey';
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-        var entityIndex = entities.length - 1;
-        for (; entityIndex != 0; entityIndex--) {
-            entities[entityIndex].draw(ctx);
+        var indexBug = bugs.length - 1;
+        for (; indexBug != 0; indexBug--) {
+            bugs[indexBug].drawBug(ctx);
+        }
+
+        var indexFood = foods.length - 1;
+        for (; indexFood != 0; indexFood--) {
+            foods[indexFood].drawFood(ctx);
         }
     }
 
     function update(elapsed) {
-        var entityIndex = entities.length - 1;
-        for (; entityIndex != 0; entityIndex--) {
-            entities[entityIndex].update(elapsed);
+        var index = bugs.length - 1;
+        for (; index != 0; index--) {
+          bugs[index].update(elapsed);
         }
+
+        console.log(bugs[0].target.x, bugs[0].target.y);
+
     }
 
     return {
@@ -168,14 +217,6 @@ mainGameScreen = (function () {
     };
 }());
 
-function randomX(){
-	min = 10;
-	max = 390;
-	interval = max - min;
-	return ((Math.random() * interval) + min)
-}
-
 currentScreen = mainGameScreen;
 currentScreen.start();
-
 beginLoop();

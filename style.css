@@ -36,11 +36,7 @@ h2{
 }
 
 canvas{
-	width:400px;
-	height:600px;
 	margin: 0 auto;
 	display: block;
 	margin-top: 10px;
 }
-
-
