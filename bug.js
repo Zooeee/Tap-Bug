@@ -5,6 +5,9 @@ var mainGameScreen;
 var bugs = [];
 var foods = [];
 var fullCircle = Math.PI * 2;
+var types = ["orange", "red", "black"];
+var easy = true;
+canvas = document.getElementById('board');
 
 function beginLoop() {
     var frameId = 0;
@@ -17,9 +20,6 @@ function beginLoop() {
     loop();
 }
 
-canvas = document.querySelector('canvas#board');
-canvas.setAttribute('width', 400);
-canvas.setAttribute('height', 600);
 
 surface = canvas.getContext('2d');
 
@@ -68,9 +68,41 @@ function makeBugs() {
     };
 
     var turnSpeed = fullCircle / 30;
-    var speed = 2;
+		var type;
+    var speed;
     var orientation = 0;
     var target = findNewTarget();
+
+		function type() {
+        var possibility = Math.random();
+        if (possibility < 0.4) {
+            type = types[0];
+						if(easy){
+							speed = 0.6;
+						}
+						else{
+							speed = 0.8;
+						}
+        }
+        if (possibility >= 0.4 && possibility <= 0.7) {
+            type = types[1];
+						if(easy){
+							speed = 0.75;
+						}
+						else{
+							speed = 1;
+						}
+        }
+        if (possibility > 0.7) {
+            type = types[2];
+						if(easy){
+							speed = 1.5;
+						}
+						else{
+							speed = 2;
+						}
+        }
+    }
 
     function makeBug(ctx, z, type) {
         ctx.translate(position.x, position.y);
@@ -116,7 +148,7 @@ function makeBugs() {
 
     function drawBug(ctx) {
         ctx.save();
-        makeBug(ctx, 5, "black");
+        makeBug(ctx, 5, type);
         ctx.restore();
     }
 
@@ -164,30 +196,35 @@ function makeBugs() {
         }
         return foods[minIndex];
     }
+
+		type();
+
     return {
-        target: target,
-        drawBug: drawBug,
-        update: update
+			type:type,
+      drawBug: drawBug,
+      update: update
     }
 }
 
+
+
 // define the main screen for the game
 mainGameScreen = (function () {
-    var numOfBugs = 5;
+    var numOfBugs = 2;
     var numOfFoods = 5;
 
     function start() {
-        for (var p = 0; p < numOfFoods; p++) {
+        for (var p = 0; p <= numOfFoods; p++) {
             foods.push(food());
         }
-        for (var i = 0; i < numOfBugs; i++) {
-            bugs.push(makeBugs()); //setInterval(makeBugs, randomTime()*1000);
-        }
+				bugs.push(makeBugs());
+				setInterval(bugs.push(makeBugs()), randomTime()*1000);
+
     }
 
     function draw(ctx) {
-        ctx.fillStyle = 'grey';
-        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, 400, 600);
 
         var indexBug = bugs.length - 1;
         for (; indexBug != 0; indexBug--) {
@@ -205,9 +242,6 @@ mainGameScreen = (function () {
         for (; index != 0; index--) {
           bugs[index].update(elapsed);
         }
-
-        console.log(bugs[0].target.x, bugs[0].target.y);
-
     }
 
     return {
