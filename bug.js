@@ -1,98 +1,172 @@
-var canvas = document.getElementById("board");
-var context = canvas.getContext("2d");
+var canvas;
+var surface;
+var currentScreen;
+var mainGameScreen;
 var bugs = [];
 var foods = [];
-var score = 0;
+var fullCircle = Math.PI * 2;
 
-function drawFood(x, y, z) {
-	context.beginPath();
-	context.arc(x, y, z * 2, 0, 2 * Math.PI);
-	context.fillStyle = "#855C33";
-	context.stroke();
-	context.fill();
-	context.closePath();
+
+function beginLoop() {
+    var frameId = 0;
+
+    function loop() {
+        frameId = window.requestAnimationFrame(loop);
+        currentScreen.update();
+        currentScreen.draw(surface);
+    }
+    loop();
 }
 
-//drawFood(30, 125, 5);
+canvas = document.getElementById("board");
+//canvas.setAttribute('width', 400);
+//canvas.setAttribute('height', 600);
 
-function makeBug(x, y, z, type){
-	info = {
-		x: x,
-		y: y,
-		speed: 200;
-		point: 5;
-	};
+surface = canvas.getContext('2d');
 
-	bugs.push(info);
-	//console.log(bugs[0]);
-	context.save();
-	context.scale(0.5, 2);
-	context.beginPath();
-	context.arc(x, y/2, z * 2, 0, 2 * Math.PI, false);
-	context.fillStyle = "red";
-	context.restore();
-	context.stroke();
-	context.closePath();
+function makeBugs() {
+    var position = {
+        x: randomX(),
+        y: 0
+    };
 
-	//front-left leg
-	context.beginPath();
-	context.moveTo(x/2 - z, y-z);
-	context.lineTo(x/2-z-5, y-z-5);
-	context.stroke();
-	context.closePath();
+    var turnSpeed = fullCircle / 30;
+    var speed = 0.2;
+    var orientation = 0;
+    var target = findNewTarget();
 
-	//front-right leg
-	context.beginPath();
-	context.moveTo(x/2 + z, y-z);
-	context.lineTo(x/2+z+5, y-z-5);
-	context.stroke();
-	context.closePath();
+    function makeBug(position, ctx, z, type) {
+        ctx.translate(position.x, position.y);
+        ctx.rotate(orientation + Math.PI * 0.5);
+        ctx.beginPath();
+        ctx.scale(0.5, 2);
+				ctx.arc(x, y/2, z * 2, 0, 2 * Math.PI);
+				//ctx.arc(0, 0, z, 0, 2 * Math.PI);
+        ctx.fillStyle = type;
+        ctx.stroke();
+        ctx.fill();
+        ctx.scale(2, .5);
+        ctx.closePath();
 
-	//hind-left leg
-	context.beginPath();
-	context.moveTo(x/2 - z, y+z);
-	context.lineTo(x/2-z-5, y+z+5);
-	context.stroke();
-	context.closePath();
+        //front-left leg
+        ctx.beginPath();
+        ctx.moveTo(-z + 2, -z + 2);
+        ctx.lineTo(-z - 3, -z - 3);
+        ctx.stroke();
+        ctx.closePath();
 
-	//hind-right leg
-	context.beginPath();
-	context.moveTo(x/2+z, y+z);
-	context.lineTo(x/2+z+5, y+z+5);
-	context.stroke();
-	context.closePath();
+        //front-right leg
+        ctx.beginPath();
+        ctx.moveTo(z - 2, -z + 2);
+        ctx.lineTo(z + 3, -z - 3);
+        ctx.stroke();
+        ctx.closePath();
 
+        //hind-left leg
+        ctx.beginPath();
+        ctx.moveTo(-z + 2, z - 2);
+        ctx.lineTo(-z - 3, z + 3);
+        ctx.stroke();
+        ctx.closePath();
+
+        //hind-right leg
+        ctx.beginPath();
+        ctx.moveTo(z - 2, z - 2);
+        ctx.lineTo(z + 3, z + 3);
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    function draw(ctx) {
+        ctx.save();
+        makeBug(ctx, 5, "orange");
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255,0,0,0.5)';
+        ctx.arc(target.x, target.y, 2, 0, Math.PI * 2, true);
+        ctx.fill();
+    }
+
+    function update() {
+        var y = target.y - position.y;
+        var x = target.x - position.x;
+        var d2 = Math.pow(x, 2) + Math.pow(y, 2);
+        if (d2 < 16) {
+            target = findNewTarget();
+        } else {
+
+            var angle = Math.atan2(y, x);
+            var delta = angle - orientation;
+            var delta_abs = Math.abs(delta);
+
+            if (delta_abs > Math.PI) {
+                delta = delta_abs - fullCircle;
+            }
+
+            if (delta !== 0) {
+                var direction = delta / delta_abs;
+                orientation += (direction * Math.min(turnSpeed, delta_abs));
+            }
+            orientation %= fullCircle;
+
+            position.x += Math.cos(orientation) * speed;
+            position.y += Math.sin(orientation) * speed;
+        }
+
+    }
+
+    function findNewTarget() {
+        var target = {
+            x: Math.round(Math.random() * 400),
+            y: Math.round(Math.random() * 600)
+        };
+
+        return target;
+    }
+
+    return {
+        draw: draw,
+        update: update
+    }
 }
-makeBug(40, 20, 4, "");
-makeBug(randomX(), 0, 4, "");
 
-function addBug() {
-	//add bug and a random time with the designed percentage
-	bugTimeout = setTimeout(makeBug(randomX(), 20, 4, ""), randomTime(10));
-}
+// define the main screen for the game
+mainGameScreen = (function () {
 
-function randomCoord(){
-	a = 5;
-	while(a>0){
-		x = Math.random()*398;
-		y = Math.random()*(600-120) + 120;
-		var foodCoord = {
-			x: x,
-			y: y
-		};
-		drawFood(x, y, 5);
-		foods.push(foodCoord);
-		a--;
-	}
-}
-randomCoord();
+    var entities = [];
+    var numOfEnemyShips = 4;
 
-function randomTime(){
-	min = 1;
-	max = 3;
-	interval = max - min;
-	return Math.floor((Math.random() * interval) + min);
-}
+    function start() {
+
+        for (var i = 0; i <= numOfEnemyShips; i++) {
+            entities.push(makeBugs(i * 10, i));
+        }
+    }
+
+    function draw(ctx) {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        var entityIndex = entities.length - 1;
+        for (; entityIndex != 0; entityIndex--) {
+            entities[entityIndex].draw(ctx);
+        }
+    }
+
+    function update(elapsed) {
+        var entityIndex = entities.length - 1;
+        for (; entityIndex != 0; entityIndex--) {
+            entities[entityIndex].update(elapsed);
+        }
+    }
+
+    return {
+        draw: draw,
+        update: update,
+        start: start
+    };
+}());
 
 function randomX(){
 	min = 10;
@@ -101,45 +175,7 @@ function randomX(){
 	return ((Math.random() * interval) + min)
 }
 
-function findFood() {
+currentScreen = mainGameScreen;
+currentScreen.start();
 
-}
-//bugCreationID = setInterval(makeBug(randomX(), 0, 4, ""), randomTime());
-//var timer = setInterval(myTimer, 5 * 1000);
-
-canvas.addEventListener("mousedown", kill, false);
-function kill(event){
-	var x = event.offsetX;
-	var y = event.offsetY;
-	for (c = 0; c < bugs.length -1; c++){
-		if(Math.abs(bugs[c].x - x) <= 30 && Math.abs(bugs[c].y - y) <= 30){
-			deleteBug(bugs[c]);
-			remove(bugs[c]);
-			score += bugs[c].score
-		}
-	}
-}
-
-function deleteBug(pos) {
-	//delete the bug -> remove the position from the list and remove it from the canvas
-	current = bugs[pos]
-	bugs = bugs.splice(pos, 1);
-
-
-}
-
-function remove (pos) {
-	//alpha = 0;
-	//delta = 0.03;
-	//if (alpha <= 0 || alpha >= 1) delta = -delta;
-	context.clearRect(x, y, 40, 40);
-}
-
-function eat() {
-	// if a bug is at a food, delete the food
-}
-function deleteFood(pos){
-	//delete the food -> remove from the list and change the color to white
-}
-
-
+beginLoop();

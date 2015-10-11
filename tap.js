@@ -43,3 +43,4 @@ function storage(){
         document.getElementById("score").innerHTML = "Sorry your browser does not support web storage";
     }
 }
+
