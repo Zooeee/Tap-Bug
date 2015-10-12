@@ -2,7 +2,6 @@ html {
 	width: 100%;
 }
 
-
 *{
   font-family:Courier;
 }
@@ -39,4 +38,8 @@ canvas{
 	margin: 0 auto;
 	display: block;
 	margin-top: 10px;
+}
+
+#afterGame{
+	display:none;
 }

@@ -1,11 +1,17 @@
-function pageTransition(){
+function pageTransition1(){
     document.getElementById("mainPage").style.display = "none";
     document.getElementById("gamePanel").style.display = "initial";
+    document.getElementById("afterGame").style.display = "none";
     countDown();
     level();
+    currentScreen = mainGameScreen;
+    currentScreen.start();
+    beginLoop();
 }
 
-window.onload = function () { document.getElementById("gamePanel").style.display = "none"; }
+
+window.onload = function(){current = 0; storage()};
+
 
 var isPaused = false;
 var i = 59;
@@ -20,6 +26,8 @@ function countDown(){
 
 function popUp(){
     alert('Time up!');
+    gameOver();
+    storage();
 }
 
 function toggleCountDown(){
@@ -30,22 +38,21 @@ function toggleCountDown(){
 }
 
 function storage(){
-    score = document.getElementById("score");
+    document.getElementById("gamePanel").style.display = "none";
     if(typeof(Storage) !== "undefined"){
-        if(localStorage.highest){
-          if(localStorage.highest < current){
-            localStorage.highest = current;
+        if (localStorage.getItem("highest") == undefined || Number(localStorage.getItem("highest")) < current){
+          localStorage.setItem("highest", current);
           }
-          document.getElementById("highest").innerHTML= localStorage.highest;
-        }
+        document.getElementById("highest").innerHTML= localStorage.highest;
     }
     else{
-        document.getElementById("score").innerHTML = "Sorry your browser does not support web storage";
+        document.getElementById("highest").innerHTML = "Sorry your browser does not support web storage";
     }
-}
+  }
 
 var canvas;
 var surface;
+var current;
 var currentScreen;
 var mainGameScreen;
 var bugs = [];
@@ -53,7 +60,6 @@ var foods = [];
 var fullCircle = Math.PI * 2;
 var types = ["orange", "red", "black"];
 var easy = false;
-var current;
 canvas = document.getElementById('board');
 
 function level(){
@@ -98,7 +104,7 @@ function randomX() {
 
 function food() {
     var pos = {
-      x:  Math.random() * 398,
+      x: Math.random() * 398,
       y: Math.random() * (600 - 120) + 120
     };
 
@@ -124,7 +130,7 @@ function makeBugs() {
         x: randomX(),
         y: 0
     };
-    var turnSpeed = fullCircle / 20;
+    var turnSpeed = fullCircle / 10;
 		var type;
     var speed;
 		var point;
@@ -216,31 +222,35 @@ function makeBugs() {
         if(foods.indexOf(target) == -1){
           target = findNewTarget();
         }
-        var y = target.y - position.y;
-        var x = target.x - position.x;
-        var d2 = Math.pow(x, 2) + Math.pow(y, 2);
-        if (d2 < 50) {
-						index = foods.indexOf(target);
-						foods.splice(index, 1);
-            target = findNewTarget();
-        } else {
-            var angle = Math.atan2(y, x);
-            var delta = angle - orientation;
-            var delta_abs = Math.abs(delta);
-
-            if (delta_abs > Math.PI) {
-                delta = delta_abs - fullCircle;
-            }
-
-            if (delta !== 0) {
-                var direction = delta / delta_abs;
-                orientation += (direction * Math.min(turnSpeed, delta_abs));
-            }
-            orientation %= fullCircle;
-
-            position.x += Math.cos(orientation) * speed;
-            position.y += Math.sin(orientation) * speed;
+        if(target == undefined){
+          gameOver();
+          return;
         }
+          var y = target.y - position.y;
+          var x = target.x - position.x;
+          var d2 = Math.pow(x, 2) + Math.pow(y, 2);
+          if (d2 < 50) {
+  						index = foods.indexOf(target);
+  						foods.splice(index, 1);
+              target = findNewTarget();
+          } else {
+              var angle = Math.atan2(y, x);
+              var delta = angle - orientation;
+              var delta_abs = Math.abs(delta);
+
+              if (delta_abs > Math.PI) {
+                  delta = delta_abs - fullCircle;
+              }
+
+              if (delta !== 0) {
+                  var direction = delta / delta_abs;
+                  orientation += (direction * Math.min(turnSpeed, delta_abs));
+              }
+              orientation %= fullCircle;
+
+              position.x += Math.cos(orientation) * speed;
+              position.y += Math.sin(orientation) * speed;
+          }
 			}
 
     function findNewTarget() {
@@ -258,33 +268,11 @@ function makeBugs() {
             }
             if(minIndex == -1){
               gameOver();
+              return;
             }
         }
         return foods[minIndex];
     }
-		canvas.addEventListener('mousedown', killBug, false);
-		function killBug(){
-			var mouse = {
-        x: event.x,
-        y: event.y
-    	}
-    	mouse.x -= canvas.offsetLeft;
-    	mouse.y -= canvas.offsetTop;
-			for(p = 0; p < bugs.length -1; p++){
-				if(Math.abs(mouse.x - x)<=30 && Math.abs(mouse.y - y)<=30){
-					var killed = bugs.splice(p, 1);
-				}
-			}
-		if(killed[0].type =="black"){
-      current += 5;
-    }
-    if(killed[0].type =="red"){
-      current += 3;
-    }
-    if(killed[0].type =="orange"){
-      current += 1;
-    }
-		}
 
 		type();
 
@@ -292,9 +280,76 @@ function makeBugs() {
 			type:type,
       drawBug: drawBug,
       update: update,
-			x: x,
-			y: y
+      killBug: killBug,
+			position: position
     }
+}
+canvas.addEventListener('mousedown', mouseDown, false);
+
+function mouseDown(event){
+  var mouse = {
+    x: event.x,
+    y: event.y
+  }
+  mouse.x -= canvas.offsetLeft;
+  mouse.y -= canvas.offsetTop;
+
+  killBug(mouse.x, mouse.y);
+}
+
+function killBug(x, y){
+  function availableBugs(x, y){
+      var available = [];
+      for(var q = 0; q<bugs.length - 1; q++){
+        currentPosition = bugs[q].position;
+        disX = currentPosition.x - x;
+        disY = currentPosition.y - y;
+        distance = Math.pow(disX, 2) + Math.pow(disY, 2);
+        if(distance <= 900){
+          available.push(bugs[q]);
+        }
+      }
+      return available;
+  }
+  function kill(x, y){
+    var available;
+    available = availableBugs(x, y);
+    for(var q = 0; q < available.length; q++){
+      index = bugs.indexOf(available[q]);
+      killed = bugs.splice(index, 1);
+      if(killed[0].type =="black"){
+        current += 5;
+      }
+      if(killed[0].type =="red"){
+        current += 3;
+      }
+      if(killed[0].type =="orange"){
+        current += 1;
+      }
+    }
+  }
+  kill(x, y);
+  /**
+  for(var q = 0; q < bugs.length - 1; q++){
+    bugPosition = bugs[q].position;
+    tempX = bugPosition.x - x;
+    tempY = bugPosition.y - y;
+    distance = Math.pow(tempX, 2) + Math.pow(tempY, 2);
+    console.log(distance);
+    if(distance <= 900){
+      killed = bugs.splice(q, 1);
+      if(killed[0].type =="black"){
+        current += 5;
+      }
+      if(killed[0].type =="red"){
+        current += 3;
+      }
+      if(killed[0].type =="orange"){
+        current += 1;
+      }
+    }
+  }
+  **/
 }
 
 // define the main screen for the game
@@ -302,15 +357,17 @@ mainGameScreen = (function game() {
     var numOfFoods = 5;
 
     function create(){
-      time = randomTime() * 1000;
-      setTimeout(function(){
-        bugs.push(makeBugs());
-        create();
-      }, time)
+      if(!isPaused){
+        time = randomTime() * 1000;
+        setTimeout(function(){
+          bugs.push(makeBugs());
+          create();
+        }, time)
+      }
     }
 
     function start() {
-      current = 0;
+      //current = 0;
         for (var p = 0; p < numOfFoods; p++) {
             foods.push(food());
         }
@@ -332,20 +389,15 @@ mainGameScreen = (function game() {
         }
     }
 
-    function update(elapsed) {
+    function update() {
         var index = bugs.length - 1;
         for (; index >= 0; index--) {
-          bugs[index].update(elapsed);
+          bugs[index].update();
         }
-    }
-
-    function gameOver(){
-      if(confirm("Play again")){
-        game();
-      }
-      else{
-        window.close();
-      }
+        if(foods.length == 0){
+          gameOver();
+          return;
+        }
     }
 
     return {
@@ -355,6 +407,10 @@ mainGameScreen = (function game() {
     };
 }());
 
-currentScreen = mainGameScreen;
-currentScreen.start();
-beginLoop();
+function gameOver(){
+  isPaused = true;
+  document.getElementById("gamePanel").style.display = "none";
+  document.getElementById("afterGame").style.display = "inline";
+  document.getElementById("latest").innerHTML = current;
+  storage();
+}
