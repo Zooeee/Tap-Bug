@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 	<head>
-	<script src="tap.js"type="text/javascript"></script>
 	<link rel="stylesheet" type="text/css" href="style.css">
 	</head>
 	<body>
@@ -11,12 +10,13 @@
 				<h4> Please Choose A Level </h4>
 				<div class="form">
 					<form name="level">
-						<input type="radio" name="level" value="Easy" checked="checked"> Easy
-						<input type="radio" name="level" value="Hard"> Hard
+						<input id='easy-checked' type="radio" name="choice" value="Easy" checked> Easy
+						<input type="radio" name="choice" value="Hard"> Hard
 					</form>
 				</div>
-				<h4> High Score: 100</h4>
-				<button type="submit" value="start" onclick="pageTransition()">Start!</button>
+				<h4> High Score: </h4>
+				<h4 id="highest"> </h4>
+				<button type="submit" value="start" onclick="pageTransition(form)">Start!</button>
 			</div>
 		</div>
 		<div id="gamePanel">
@@ -26,12 +26,13 @@
 					<span id='time'>01:00</span>
 				</div>
 				<button class='tab' id='pause' onClick='toggleCountDown()'>Pause</button>
-				<div class='tab'>Score: 100</div>
+				<div class='tab'>Score: </div>
+				<div id="current"></div>
 			</div>
 			<canvas id='board' width = "400" height = "600" style="border:1px solid #d3d3d3;">
 			Your browser does not support the HTML5 canvas tag.
 			</canvas>
-			<script src="bug.js"type="text/javascript"></script>
+			<script src="tap.js"type="text/javascript"></script>
 		</div>
 	</body>
 </html>

@@ -7,7 +7,17 @@ var foods = [];
 var fullCircle = Math.PI * 2;
 var types = ["orange", "red", "black"];
 var easy = true;
+var score;
 canvas = document.getElementById('board');
+
+function level(form){
+
+	var radios = form.elements["radio"];
+	if(radios[0].checked){
+		easy = true;
+	}
+	console.log(easy);
+}
 
 function beginLoop() {
     var frameId = 0;
@@ -66,10 +76,10 @@ function makeBugs() {
         x: randomX(),
         y: 0
     };
-
     var turnSpeed = fullCircle / 30;
 		var type;
     var speed;
+		var point;
     var orientation = 0;
     var target = findNewTarget();
 
@@ -77,6 +87,7 @@ function makeBugs() {
         var possibility = Math.random();
         if (possibility < 0.4) {
             type = types[0];
+						point = 1;
 						if(easy){
 							speed = 0.6;
 						}
@@ -86,6 +97,7 @@ function makeBugs() {
         }
         if (possibility >= 0.4 && possibility <= 0.7) {
             type = types[1];
+						point = 3;
 						if(easy){
 							speed = 0.75;
 						}
@@ -95,6 +107,7 @@ function makeBugs() {
         }
         if (possibility > 0.7) {
             type = types[2];
+						point = 5;
 						if(easy){
 							speed = 1.5;
 						}
@@ -109,7 +122,6 @@ function makeBugs() {
         ctx.rotate(orientation + Math.PI * 0.5);
         ctx.beginPath();
         ctx.scale(0.5, 2);
-        //ctx.arc(x, y/2, z * 2, 0, 2 * Math.PI, false);
         ctx.arc(0, 0, z, 0, 2 * Math.PI);
         ctx.fillStyle = type;
         ctx.stroke();
@@ -156,10 +168,13 @@ function makeBugs() {
         var y = target.y - position.y;
         var x = target.x - position.x;
         var d2 = Math.pow(x, 2) + Math.pow(y, 2);
-        if (d2 < 70) {
-            target = findNewTarget();
+        if (d2 < 5) {
+						target = findNewTarget();
+						index = foods.indexOf(target);
+						console.log(index);
+						console.log(foods);
+						foods.splice(index, 1);
         } else {
-
             var angle = Math.atan2(y, x);
             var delta = angle - orientation;
             var delta_abs = Math.abs(delta);
@@ -177,8 +192,7 @@ function makeBugs() {
             position.x += Math.cos(orientation) * speed;
             position.y += Math.sin(orientation) * speed;
         }
-
-    }
+			}
 
     function findNewTarget() {
         //calculate the closest path between the bug and food
@@ -194,23 +208,37 @@ function makeBugs() {
                 minIndex = l;
             }
         }
-        return foods[minIndex];
+        return foods[minIndex];//minIndex
     }
+		canvas.addEventListener('mousedown', killBug, false);
+		function killBug(x, y){
+			var mouse = {
+        x: event.x,
+        y: event.y
+    	}
+    	mouse.x -= canvas.offsetLeft;
+    	mouse.y -= canvas.offsetTop;
+			for(p = 0; p < bugs.length; p++){
+				if(Math.abs(mouse.x - x)<=30 && Math.abs(mouse.y - y)<=30){
+					var killed = bugs.splice(p, 1);
+				}
+			}
+			//score += ;
+		}
 
 		type();
 
     return {
 			type:type,
       drawBug: drawBug,
-      update: update
+      update: update,
+			x: x,
+			y: y
     }
 }
 
-
-
 // define the main screen for the game
 mainGameScreen = (function () {
-    var numOfBugs = 2;
     var numOfFoods = 5;
 
     function start() {
@@ -218,8 +246,9 @@ mainGameScreen = (function () {
             foods.push(food());
         }
 				bugs.push(makeBugs());
-				setInterval(bugs.push(makeBugs()), randomTime()*1000);
-
+        setInterval(function () {
+          	bugs.push(makeBugs());
+        }, randomTime() * 1000);
     }
 
     function draw(ctx) {
